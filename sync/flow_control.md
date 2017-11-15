@@ -1,13 +1,12 @@
 # Flow Control
 
-Thread之间除了共用资料以外，流程同步也是常用到的一个技巧。如果把人当做一个thread，彼此之间协同合作就是flow control。是不是常常会有某A做完了一个动作之后，某B甚至某C才可以继续做后续的动作呢? 在multi-thread中也常常会有这样的需求。
+Thread之间除了共用数据以外，流程同步也是常用到的一个技巧。如果把人当做一个thread，彼此之间协同合作就是flow control。是不是常常会有某A做完了一个动作之后，某B甚至某C才可以继续做后续的动作呢? 在multi-thread中也常常会有这样的需求。
 
 ## Wait and notify
 
-在java中有关流程控制有一个最基本的primitive，那就是`Object#wait()`跟`Object#notify()`。当一个thread对一个对象呼叫`wait()`之后会完全卡住，要一直到另外一个thread触发
-`notify()`才可以继续往下执行。几乎所有有关流程控制的逻辑最底层都是透过wait跟notify来实现。
+在java中有关流程控制有一个最基本的primitive，那就是`Object#wait()`跟`Object#notify()`。当一个thread对一个对象调用`wait()`之后会完全卡住，要一直到另外一个thread触发`notify()`才可以继续往下执行。几乎所有有关流程控制的逻辑最底层都是透过wait跟notify来实现。
 
-我打算用一个简化版的[Producer Consumer Pattern](https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem)来解释flow control。通常producer负责产生message，而consuemer负责接收并处理message。中间会有一个queue，当produce时queue是满的，或是consume时queue是空的，那caller thread就会被blocked，直到状态解除为止。但是为了方便解释起见，这边拿掉了queue，而只单纯的让producerd丢一个message给consumer而已。下面是一个例子:
+我打算用一个简化版的[Producer Consumer Pattern](https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem)来解释flow control。通常producer负责产生message，而consuemer负责接收并处理message。中间会有一个queue，当queue是满的时produce，或queue是空的时consume，那caller thread就会被blocked，直到状态解除为止。但是为了方便解释起见，这边拿掉了queue，而只单纯的让producerd丢一个message给consumer而已。下面是一个例子:
 
 ```java
 public class FlowControl {
@@ -57,13 +56,11 @@ public class FlowControl {
 }
 ```
 
-我们分别定义了`produce()`跟`consume()`两个methods。在consume中，我们会呼叫`lock.wait()`，注意wait这个method一定要让被呼叫的那个object被包在**sychronized block**之中，不然直接会有compile error。相对的，在produce中我们会呼叫`lock.notify()`，同样的也是要包在synchronized中。
+我们分别定义了`produce()`跟`consume()`两个methods。在consume中，我们会调用`lock.wait()`，注意wait这个method一定要让被调用的那个object被包在**sychronized block**之中，不然直接会有compile error。相对的，在produce中我们会呼叫`lock.notify()`，同样的也是要包在synchronized中。
 
-在这个例子裡面，我们也可以用`this`来取代`lock`物件。也就是用`sychronized(this)`, `this.wait()`, `this.notify()`取代。但这边会用一个独立的lock有个优点就是有比较好的隔离效果，以避免外部取得`FlowContorl`此class的instance的人，有机会影响内部结果。
+在这个例子里面，我们也可以用`this`来取代`lock`物件。也就是用`sychronized(this)`, `this.wait()`, `this.notify()`取代。但这边会用一个独立的lock有个优点就是有比较好的隔离效果，以避免外部取得`FlowContorl`此class的instance的人，有机会影响内部结果。
 
 最后看到`main` method，我们起了两个threads，先是consumer thread，他会等著consume一个message；再来睡了一秒钟后，我们产生了producer thread，他会produce一个`helloworld` message。最后跑出的结果就会像这样
-
-> 注意，`wait()`和`notify()`方法调用之前必须拿到object的锁，详情参见java api。
 
 ```
 wait for message
@@ -71,13 +68,15 @@ produce message: helloworld
 consume message: helloworld
 ```
 
+> 注意，`wait()`和`notify()`方法调用之前必须拿到object的锁，详情参见java api。
+
 另外有一个`Object#notifyAll()` method其实跟`Object#notify()`类似前者一次叫醒所有waiting threads，后者只会叫醒一个waiting thread。
 
 ## Thread Join
 
 另外一种更简单的做法就是thread join。**Join**这个动词在流程同步的时候常常会使用，它代表的是等待别人工作的完成；而相对的词是**Fork**，代表的是把工作发包给别的thread开始做。
 
-下面的程式码则是一个简单的范例，我们产生一个worker thread来执行我们的task，在我们的main thread中去**join**这个worker
+下面的代码则是一个简单的范例，我们产生一个worker thread来执行我们的task，在我们的main thread中去**join**这个worker
 
 ```java
 // Create workder thread
@@ -98,7 +97,7 @@ worker.join();
 System.out.println("master complete");
 ```
 
-此程式码的output会像下面这样，可以看到master要等worker完成后，才会继续往下执行。
+此代码的output会像下面这样，可以看到master要等worker完成后，才会继续往下执行。
 
 ```
 master wait

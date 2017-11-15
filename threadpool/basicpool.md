@@ -1,6 +1,6 @@
 #Basic Pool
 
-在Java中，thread pool都会实作一个介面[Executor](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Executor.html)，事实上更明确的说是实作[ExecutorService](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html)这个介面。前者只定义了一个简单的`execute` method，就跟我前面一个章节的`execute`定义一模一样，就是在thread pool中执行一个task。
+在Java中，thread pool都会实现一个接口[Executor](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Executor.html)，事实上更明确的说是实现[ExecutorService](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html)这个接口。前者只定义了一个简单的`execute` method，就跟我前面一个章节的`execute`定义一模一样，就是在thread pool中执行一个task。
 
 ```java
 public interface Executor {
@@ -8,7 +8,7 @@ public interface Executor {
 }
 ```
 
-后者继承了Exectuor介面，定义了更多的method，
+后者继承了Exectuor接口，定义了更多的method，
 
 ```java
 public interface ExecutorService extends Executor {
@@ -49,7 +49,7 @@ public interface ExecutorService extends Executor {
 
 Methods | Description
 --------|-----------------
-submit | 可以呼叫没有回传值的task(Runnable)跟有回传值的task(Callable)，并且会回传一个[Future](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Future.html)。这个Future的概念容我稍后介绍。
+submit | 可以调用没有回传值的task(Runnable)跟有回传值的task(Callable)，并且返回一个[Future](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Future.html)。这个Future的概念容我稍后介绍。
 invokeAll| 一次执行多个task，并且取得所有task的future objects 
 invokeAny | 一次执行多个task，并且取得第一个完成的task的future object
 shutdown<br>shutdownNow<br> | 让整个thread pool的threads都停止，简单讲就是打烊了。

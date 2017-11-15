@@ -1,6 +1,6 @@
-# Message Passing
+# 消息传递
 
-Message passing简单来讲就是一个thread想把资料丢给另外一个thread去做处理。其实在前面flow control的章节在讲producer/consumer pattern时，其实就已经点出了一个概念。但是可以看得出我们的实作过于简略，producer跟consumer共用了同一个message变数，当producer/consumer多了，势必会造成前面所说的**race condition**。那有没有办法用更high-level的方式来传递资讯呢?
+Message passing简单来讲就是一个thread想把数据丢给另外一个thread去做处理。其实在前面flow control的章节在讲producer/consumer pattern时，其实就已经点出了一个概念。但是可以看得出我们的实现过于简略，producer跟consumer共用了同一个message变量，当producer/consumer多了，势必会造成前面所说的**race condition**。那有没有办法用更high-level的方式来传递资讯呢?
 
 工厂生产的时候，有一个名词是生产线(pipeline)，每一站都把前一个站的产出变成下一站的来源，而最后一站的产出就是这个工厂的产品。其实这个概念可以想像每一站就是一个thread，而这些站跟站之间的半成品就可以称它为message。而站跟站之间，会透过一个输送带当作管道传递，而这个管道我们称为pipe或是queue。
 
@@ -55,7 +55,7 @@ public class ProducerConsumer {
     }
 }
 ```
-可以看得到我们在produce中呼叫了`BlockingQueue#put()`，它会放一个message进queue中，如果满了会block；同样的在consume的地方呼叫`BlockingQueue#take()`，它会从queue中取一笔资料出来，如果queue是空的则会block。为了刻意让queue比较容易满，我把queue的constructor带`5`进去，这代表的是它的容量。我们可以改变`main`中的sleep time，来模拟**供过于求**跟**供不应求**的状况。
+可以看得到我们在produce中调用了`BlockingQueue#put()`，它会放一个message进queue中，如果满了会block；同样的在consume的地方调用`BlockingQueue#take()`，它会从queue中取一笔数据出来，如果queue是空的则会block。为了刻意让queue比较容易满，我把queue的constructor带`5`进去，这代表的是它的容量。我们可以改变`main`中的sleep time，来模拟**供过于求**跟**供不应求**的状况。
 
 ## Pipe
 
@@ -73,8 +73,8 @@ tail accesslog | awk '{print $1}' | sort | uniq -c  | sort -nr
 
 我们把前面process的stdout当作下一个process的stdin。透过这行指令，我们马上建立一个pipeline，最后把结果印出到terminal之上，有没有很像我刚刚说的工厂的情境?
 
-在Java中thread之间也可以这麽做(虽然这麽做不常见 ^^)，利用的是[PipedOutputStream](https://docs.oracle.com/javase/8
-/docs/api/java/io/PipedOutputStream.html)跟[PipedInputStream](https://docs.oracle.com/javase/8/docs/api/java/io/PipedInputStream.html)这两个class，两者可组合成一个Pipe，其中outputstream的产出就会是inputstream的输入。下面是个范例。
+在Java中thread之间也可以这么做(虽然这么做不常见 ^^)，利用的是[PipedOutputStream](https://docs.oracle.com/javase/8
+/docs/api/java/io/PipedOutputStream.html)跟[PipedInputStream](https://docs.oracle.com/javase/8/docs/api/java/io/PipedInputStream.html)这两个class，两者可组合成一个Pipe，其中outputstream的产出就会是inputstream的输入。下面是个例子。
 
 ```java
 public class Pipe {
@@ -132,4 +132,4 @@ public class Pipe {
 
 ## Recap
 
-到这裡我们讨论了resource sharing, flow control, message passing。这可以说是multi-threading中最重要的三个议题。但是mult-thread程式不好撰写，即使是知道了上面这些课题，还是很容易出错。因此有必要把更high-level，更一般化的问题包装成更好用的介面。后面章节我们会把thread pool跟asynchronous invokation这两个常用的情境做更进一步介绍。
+到这里我们讨论了resource sharing, flow control, message passing。这可以说是multi-threading中最重要的三个议题。但是mult-thread程序不好编写，即使是知道了上面这些话题，还是很容易出错。因此有必要把更high-level，更一般化的问题包装成更好用的接口。后面章节我们会把thread pool跟asynchronous invokation这两个常用的情境做更进一步介绍。
