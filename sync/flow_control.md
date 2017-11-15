@@ -1,13 +1,13 @@
 # Flow Control
 
-Thread之間除了共用資料以外，流程同步也是常用到的一個技巧。如果把人當做一個thread，彼此之間協同合作就是flow control。是不是常常會有某A做完了一個動作之後，某B甚至某C才可以繼續做後續的動作呢? 在multi-thread中也常常會有這樣的需求。
+Thread之间除了共用资料以外，流程同步也是常用到的一个技巧。如果把人当做一个thread，彼此之间协同合作就是flow control。是不是常常会有某A做完了一个动作之后，某B甚至某C才可以继续做后续的动作呢? 在multi-thread中也常常会有这样的需求。
 
 ## Wait and notify
 
-在java中有關流程控制有一個最基本的primitive，那就是`Object#wait()`跟`Object#notify()`。當一個thread對一個物件呼叫`wait()`之後會完全卡住，要一直到另外一個thread觸發
-`notify()`才可以繼續往下執行。幾乎所有有關流程控制的邏輯最底層都是透過wait跟notify來實現。
+在java中有关流程控制有一个最基本的primitive，那就是`Object#wait()`跟`Object#notify()`。当一个thread对一个物件呼叫`wait()`之后会完全卡住，要一直到另外一个thread触发
+`notify()`才可以继续往下执行。几乎所有有关流程控制的逻辑最底层都是透过wait跟notify来实现。
 
-我打算用一個簡化版的[Producer Consumer Pattern](https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem)來解釋flow control。通常producer負責產生message，而consuemer負責接收並處理message。中間會有一個queue，當produce時queue是滿的，或是consume時queue是空的，那caller thread就會被blocked，直到狀態解除為止。但是為了方便解釋起見，這邊拿掉了queue，而只單純的讓producerd丟一個message給consumer而已。下面是一個範例程式:
+我打算用一个简化版的[Producer Consumer Pattern](https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem)来解释flow control。通常producer负责产生message，而consuemer负责接收并处理message。中间会有一个queue，当produce时queue是满的，或是consume时queue是空的，那caller thread就会被blocked，直到状态解除为止。但是为了方便解释起见，这边拿掉了queue，而只单纯的让producerd丢一个message给consumer而已。下面是一个范例程式:
 
 ```java
 public class FlowControl {
@@ -57,11 +57,11 @@ public class FlowControl {
 }
 ```
 
-我們分別定義了`produce()`跟`consume()`兩個methods。在consume中，我們會呼叫`lock.wait()`，注意wait這個method一定要讓被呼叫的那個object被包在**sychronized block**之中，不然直接會有compile error。相對的，在produce中我們會呼叫`lock.notify()`，同樣的也是要包在synchronized中。
+我们分别定义了`produce()`跟`consume()`两个methods。在consume中，我们会呼叫`lock.wait()`，注意wait这个method一定要让被呼叫的那个object被包在**sychronized block**之中，不然直接会有compile error。相对的，在produce中我们会呼叫`lock.notify()`，同样的也是要包在synchronized中。
 
-在這個例子裡面，我們也可以用`this`來取代`lock`物件。也就是用`sychronized(this)`, `this.wait()`, `this.notify()`取代。但這邊會用一個獨立的lock有個優點就是有比較好的隔離效果，以避免外部取得`FlowContorl`此class的instance的人，有機會影響內部結果。
+在这个例子裡面，我们也可以用`this`来取代`lock`物件。也就是用`sychronized(this)`, `this.wait()`, `this.notify()`取代。但这边会用一个独立的lock有个优点就是有比较好的隔离效果，以避免外部取得`FlowContorl`此class的instance的人，有机会影响内部结果。
 
-最後看到`main` method，我們起了兩個threads，先是consumer thread，他會等著consume一個message；再來睡了一秒鐘後，我們產生了producer thread，他會produce一個`helloworld` message。最後跑出的結果就會像這樣
+最后看到`main` method，我们起了两个threads，先是consumer thread，他会等著consume一个message；再来睡了一秒钟后，我们产生了producer thread，他会produce一个`helloworld` message。最后跑出的结果就会像这样
 
 ```
 wait for message
@@ -69,13 +69,13 @@ produce message: helloworld
 consume message: helloworld
 ```
 
-另外有一個`Object#notifyAll()` method其實跟`Object#notify()`類似前者一次叫醒所有waiting threads，後者只會叫醒一個waiting thread。
+另外有一个`Object#notifyAll()` method其实跟`Object#notify()`类似前者一次叫醒所有waiting threads，后者只会叫醒一个waiting thread。
 
 ## Thread Join
 
-另外一種更簡單的做法就是thread join。**Join**這個動詞在流程同步的時候常常會使用，它代表的是等待別人工作的完成；而相對的詞是**Fork**，代表的是把工作發包給別的thread開始做。
+另外一种更简单的做法就是thread join。**Join**这个动词在流程同步的时候常常会使用，它代表的是等待别人工作的完成；而相对的词是**Fork**，代表的是把工作发包给别的thread开始做。
 
-下面的程式碼則是一個簡單的範例，我們產生一個worker thread來執行我們的task，在我們的main thread中去**join**這個worker
+下面的程式码则是一个简单的范例，我们产生一个worker thread来执行我们的task，在我们的main thread中去**join**这个worker
 
 ```java
 // Create workder thread
@@ -96,7 +96,7 @@ worker.join();
 System.out.println("master complete");
 ```
 
-此程式碼的output會像下面這樣，可以看到master要等worker完成後，才會繼續往下執行。
+此程式码的output会像下面这样，可以看到master要等worker完成后，才会继续往下执行。
 
 ```
 master wait
@@ -107,8 +107,8 @@ master complete
 
 ## Other Utilities
 
-礙於篇幅關係(~~還是因為懶~~)，其他還有一些工具可以幫你做flow control
+碍于篇幅关系(~~还是因为懒~~)，其他还有一些工具可以帮你做flow control
 
-- [CyclicBarrier](https://docs.oracle.com/javase/8/docs/api/index.html?java/util/concurrent/CyclicBarrier.html): Barrier算是一個流程同步的時常用的術語，代表的是所有的threads都需要到達某著stage的時候，才繼續往下走。這概念就很像出遊的時候，大家會在一個地點集合，全員到齊了再一起出發的概念。
-- [CountDownLatch](https://docs.oracle.com/javase/8/docs/api/index.html?java/util/concurrent/CountDownLatch.html): 其實就如其名，是一個倒數的概念。每呼叫一次`countdown()`則倒數的counter就會減一，當一個thread去呼叫`await()`時，會一直卡在那邊，直到counter歸零為止，才會繼續往下走。
-- [Future](https://docs.oracle.com/javase/8/docs/api/index.html?java/util/concurrent/Future.html) and [Completable Future](https://docs.oracle.com/javase/8/docs/api/index.html?java/util/concurrent/CompletableFuture.html): 這個是Flow Control更高層次的封裝，因為內容比較多，我留在後面的章節再做討論。
+- [CyclicBarrier](https://docs.oracle.com/javase/8/docs/api/index.html?java/util/concurrent/CyclicBarrier.html): Barrier算是一个流程同步的时常用的术语，代表的是所有的threads都需要到达某著stage的时候，才继续往下走。这概念就很像出游的时候，大家会在一个地点集合，全员到齐了再一起出发的概念。
+- [CountDownLatch](https://docs.oracle.com/javase/8/docs/api/index.html?java/util/concurrent/CountDownLatch.html): 其实就如其名，是一个倒数的概念。每呼叫一次`countdown()`则倒数的counter就会减一，当一个thread去呼叫`await()`时，会一直卡在那边，直到counter归零为止，才会继续往下走。
+- [Future](https://docs.oracle.com/javase/8/docs/api/index.html?java/util/concurrent/Future.html) and [Completable Future](https://docs.oracle.com/javase/8/docs/api/index.html?java/util/concurrent/CompletableFuture.html): 这个是Flow Control更高层次的封装，因为内容比较多，我留在后面的章节再做讨论。

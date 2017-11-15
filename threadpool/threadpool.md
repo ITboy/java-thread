@@ -1,14 +1,14 @@
 # Thread Pool
 
-前面講的都是開一個新的thread來完成單一個工作，但是開thread是有成本的。如果每一個小的task就開一thread，並且有很多的小task需要處理，那產生thread的overhead是很可觀的。因此，比較好的方法是產生一堆threads，稱之為thread pool，讓這些開好的threads來處理這一堆小工作。
+前面讲的都是开一个新的thread来完成单一个工作，但是开thread是有成本的。如果每一个小的task就开一thread，并且有很多的小task需要处理，那产生thread的overhead是很可观的。因此，比较好的方法是产生一堆threads，称之为thread pool，让这些开好的threads来处理这一堆小工作。
 
-其實thread pool的概念在我們的生活中處處可見。開thread處理task就很像外包一個工作，可能我們會在網路上找一個人過來幫忙處理，等到事情處理完了合約就結束了。但是當事情多了，那就可能直接聘雇一群人當作員工來處理事情，這群正職員工就是thread pool，在此員工就是thread，而工作就是task。
+其实thread pool的概念在我们的生活中处处可见。开thread处理task就很像外包一个工作，可能我们会在网路上找一个人过来帮忙处理，等到事情处理完了合约就结束了。但是当事情多了，那就可能直接聘雇一群人当作员工来处理事情，这群正职员工就是thread pool，在此员工就是thread，而工作就是task。
 
-在銀行中也會看到thread pool的例子，辦理金融業務的可能會有三四個櫃檯，而當我們有事情要處理會在取票機中提取一個號碼。當職員處理完一個人的業務時，就會叫下一個人過來處理。在這邊職員就是thread，而我們的號碼牌就是一個task，而這個取票機就是queue。
+在银行中也会看到thread pool的例子，办理金融业务的可能会有三四个柜檯，而当我们有事情要处理会在取票机中提取一个号码。当职员处理完一个人的业务时，就会叫下一个人过来处理。在这边职员就是thread，而我们的号码牌就是一个task，而这个取票机就是queue。
 
-對!我講到一個重點了，thread pool的三大元素就是thread, task, 跟queue。而其實thread pool就是producer consumer pattern的一種形式。consumer就是一堆threads，當queue中一有工作進來，一個空閒的thread就會取出來做處理。
+对!我讲到一个重点了，thread pool的三大元素就是thread, task, 跟queue。而其实thread pool就是producer consumer pattern的一种形式。consumer就是一堆threads，当queue中一有工作进来，一个空閒的thread就会取出来做处理。
 
-我把前面message passing的程式碼拿過來改一下，馬上就做出一個thread pool。
+我把前面message passing的程式码拿过来改一下，马上就做出一个thread pool。
 
 ```java
 public class ThreadPool implements Runnable{
@@ -77,11 +77,11 @@ public class ThreadPool implements Runnable{
 }
 ```
 
-這段程式碼跟producer consumer的code非常的接近，都有一個queue，都有produce跟consume methods。不一樣的是queue裡面放的是一個Runnable，代表的是一個可以執行的task。
+这段程式码跟producer consumer的code非常的接近，都有一个queue，都有produce跟consume methods。不一样的是queue裡面放的是一个Runnable，代表的是一个可以执行的task。
 
-另外在constructor中我們有一個參數是`numberOfThreads`，也就是這個thread pool中產生threads的個數，而每個thread的執行內容是一個infinite loop，做的事情就不斷的從queue中拿一個task出來，去執行裡面的內容。
+另外在constructor中我们有一个参数是`numberOfThreads`，也就是这个thread pool中产生threads的个数，而每个thread的执行内容是一个infinite loop，做的事情就不断的从queue中拿一个task出来，去执行裡面的内容。
 
-在main method中我產生了一個thread pool，裡面有五個職員(thread)跟一個取票機(queue)。而我抽了十張號碼牌(task)，在當中隨機睡了一段時間並且印出訊息，最後執行的結果大概會像下面這樣。
+在main method中我产生了一个thread pool，裡面有五个职员(thread)跟一个取票机(queue)。而我抽了十张号码牌(task)，在当中随机睡了一段时间并且印出讯息，最后执行的结果大概会像下面这样。
 
 ```
 Thread-1: task 1 complete
@@ -101,5 +101,5 @@ Thread-1 shutdown
 Thread-4 shutdown
 ```
 
-其實自己做thread pool就是那麼簡單，沒有什麼高深的學問。當然你不需要自己做thread pool，在java中已經有很多現有的thread pool可以直接拿來使用，不必自己造輪子。接下來介紹一下有哪些thread pool可以拿來使用。
+其实自己做thread pool就是那么简单，没有什么高深的学问。当然你不需要自己做thread pool，在java中已经有很多现有的thread pool可以直接拿来使用，不必自己造轮子。接下来介绍一下有哪些thread pool可以拿来使用。
 
