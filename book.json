@@ -1,6 +1,6 @@
 {
-    "title": "Java多執行緒的基本知識",
-    "author": "popcornylu",
+    "title": "Java多线程的基本知识",
+    "author": "popcornylu, prepper",
     "pluginsConfig": {
         "autocover": {
             "font": {
