@@ -4,10 +4,10 @@ Thread之间除了共用资料以外，流程同步也是常用到的一个技�
 
 ## Wait and notify
 
-在java中有关流程控制有一个最基本的primitive，那就是`Object#wait()`跟`Object#notify()`。当一个thread对一个物件呼叫`wait()`之后会完全卡住，要一直到另外一个thread触发
+在java中有关流程控制有一个最基本的primitive，那就是`Object#wait()`跟`Object#notify()`。当一个thread对一个对象呼叫`wait()`之后会完全卡住，要一直到另外一个thread触发
 `notify()`才可以继续往下执行。几乎所有有关流程控制的逻辑最底层都是透过wait跟notify来实现。
 
-我打算用一个简化版的[Producer Consumer Pattern](https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem)来解释flow control。通常producer负责产生message，而consuemer负责接收并处理message。中间会有一个queue，当produce时queue是满的，或是consume时queue是空的，那caller thread就会被blocked，直到状态解除为止。但是为了方便解释起见，这边拿掉了queue，而只单纯的让producerd丢一个message给consumer而已。下面是一个范例程式:
+我打算用一个简化版的[Producer Consumer Pattern](https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem)来解释flow control。通常producer负责产生message，而consuemer负责接收并处理message。中间会有一个queue，当produce时queue是满的，或是consume时queue是空的，那caller thread就会被blocked，直到状态解除为止。但是为了方便解释起见，这边拿掉了queue，而只单纯的让producerd丢一个message给consumer而已。下面是一个例子:
 
 ```java
 public class FlowControl {
@@ -63,6 +63,8 @@ public class FlowControl {
 
 最后看到`main` method，我们起了两个threads，先是consumer thread，他会等著consume一个message；再来睡了一秒钟后，我们产生了producer thread，他会produce一个`helloworld` message。最后跑出的结果就会像这样
 
+> 注意，`wait()`和`notify()`方法调用之前必须拿到object的锁，详情参见java api。
+
 ```
 wait for message
 produce message: helloworld
@@ -104,6 +106,15 @@ worker start
 worker complete
 master complete
 ```
+
+## InterruptedException
+
+在如上例子中总是出现InterruptedException异常，这个异常很烦，什么时候要捕获？为什么要捕获这个异常？
+1. sleep
+2. wait
+3. join
+
+我们发现每次线程再调用阻塞线程的方法的时候，会强制捕获这个异常，因为如果一个线程是不可打断的，那么当他阻塞的时候就只能等待他结束了，如果程序设计不合理，这个线程就有可能永远不会停止，所以默认jdk提供的阻塞方法总是会使线程进入可被打断的阻塞状态，这样，别的线程可以随时调用某线程对象的`interrupt()`方法打断线程，这时阻塞线程就会恢复运行状态，进入`catch(InterruptedException)`流程，这样，就强制每个线程进入阻塞状态时为他安装被打断处理。
 
 ## Other Utilities
 
