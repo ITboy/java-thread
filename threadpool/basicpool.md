@@ -1,5 +1,59 @@
 #Basic Pool
 
+对比[thread](thread.md)中的线程使用的五个场景，其实不外乎是想使用一个独立的线程去执行一个任务，直接使用线程的方法可以用`Runnable`接口描述一个任务，`new Thread`来执行这个任务。相比这种办法，线程池是一种新的执行任务的方式，本质上是使得任务和任务如何被执行解耦。
+使用线程：
+```java
+new Thread(new Runnable() {
+    ...
+}).start();
+```
+
+使用线程池：
+``` java
+Executor.execute(new Runnable() {
+});
+```
+
+所以大多数情况下，我们无需在直接使用线程，而**直接使用线程池**来执行任务。
+
+## `Excutor`
+
+`Executor`接口只有一个execute方法，他表示自己是一个执行者，可以执行`Runnable`接口的实现，本身是跟线程池无关的概念。
+
+从功能上来看Thread其实也是一个执行者，他也要求传递一个`Runnable`的实现，把这个`Runnable`放在一个线程中执行，因此他是一个特殊的执行者，因为执行者的功能只有执行任务这个含义，不要求是在当前线程还是另辟线程，还是交由线程池，还是有多少延迟后在执行，仅仅执行。
+
+## `Runnable`与`Callable`
+
+这两个接口作为基础接口在后面会经常使用，都可以表示被执行的任务，区别在于：
+1. `Runnable`接口的函数不可以有返回值，`Callable`接口的函数有返回值，并且使用泛型来传入返回值类型。
+2. `Runnable`接口的函数不能抛出checked异常，而`Callable`可以。
+
+```java
+Interface Callable<V> {
+    V call() throws Exception;
+}
+```
+
+```java
+Interface Runnable {
+    void run();
+}
+```
+
+## `Future`
+
+`Future`是异步执行的顺时结果，他保存异步任务的执行结果和执行状态，提供以下方法：
+1. `V get()` - 取得异步任务的值，可能阻塞当前线程，知道异步任务执行结束，拿到执行结果返回。
+2. `isCanceled()` - 任务是否已经被取消，如果还未结束或已经执行成功，就返回false，否则返回true
+3. `isDone()` - 任务是否已经结束，不代表任务一定成功，如果任务被取消，仍然返回true，该值标明任务是仍然在执行还是已经结束。
+4. `cancel(boolean mayInterruptIfRunning)` - 取消任务执行，如果任务已经执行结束，返回false表明取消失败，如果任务还没有执行结束，取消有两种情况，一种是任务还在队列中，没有开始执行，此时直接将任务从队列移除，另一种是当前任务正在被执行，参数`mayInterruptIfRunning`为`true`表示此时要打断正在执行任务的线程，强制取消，如果`mayInterruptIfRunning`设为`false`则等待当前任务执行结束。
+
+所以`Future`接口封装了一系列对异步执行结果进行操作的基本方法，包括取得执行结果，取得当前状态，取消任务。
+
+## `CompletableFuture`
+
+## ExcutorService
+
 在Java中，thread pool都会实现一个接口[Executor](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Executor.html)，事实上更明确的说是实现[ExecutorService](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html)这个接口。前者只定义了一个简单的`execute` method，就跟我前面一个章节的`execute`定义一模一样，就是在thread pool中执行一个task。
 
 ```java
