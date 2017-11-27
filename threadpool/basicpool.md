@@ -50,7 +50,27 @@ Interface Runnable {
 
 所以`Future`接口封装了一系列对异步执行结果进行操作的基本方法，包括取得执行结果，取得当前状态，取消任务。
 
+## `CompletionStage`
+
+`Future`有一个很大的缺点，作为一个异步执行的结果，他只能使用阻塞的方式来主动获取结果，或者不断的循环来查看执行的状态，不能在异步执行结束时被通知，所以在读取执行结果仍然要使用同步的方式。
+
+CompletionStage是一个接口，允许为异步执行添加回调函数。根据API的描述：
+
+> A stage of a possibly asynchronous computation, that performs an action or computes a value when another CompletionStage completes. A stage completes upon termination of its computation, but this may in turn trigger other dependent stages.
+
+`CompletionStage`执行一个动作或计算一个值的时期，他是另一个`CompletionStage`完成时触发，当他执行结束后也会触发另一个依赖的`CompletionStage`。
+
+关于接口的更多信息，参考 [the-future-is-completable-in-java-8/](http://www.jesperdj.com/2015/09/26/the-future-is-completable-in-java-8/)和官方API。
+
 ## `CompletableFuture`
+
+实现了`Future`和`CompletionStage`。这样`CompletableFuture`就代表了一个异步执行的结果以及执行的时期，可以为他的执行结束添加回调函数。
+API手册的定义：
+
+> A Future that may be explicitly completed (setting its value and status), and may be used as a CompletionStage, supporting dependent functions and actions that trigger upon its completion.
+
+他是一个可以被显式完成的future，也就是可以设置他的执行结果和状态，并且可以被作为`CompletionStage`来使用，支持当他执行完成的时候触发依赖的function和动作。
+
 
 ## ExcutorService
 
