@@ -71,6 +71,115 @@ API手册的定义：
 
 他是一个可以被显式完成的future，也就是可以设置他的执行结果和状态，并且可以被作为`CompletionStage`来使用，支持当他执行完成的时候触发依赖的function和动作。
 
+### 产生`CompletableFuture`
+
+#### 构造函数
+
+构造函数构造一个未完成状态的`CompletableFuture`，需要显式调用`CompletableFuture#complete`等来触发他的一系列回调函数。
+
+```java
+		CompletableFuture<Integer> cf = new CompletableFuture<Integer>();
+		cf.thenAccept((i) -> {
+			System.out.println(i);
+		});
+		cf.complete(1024); // 没有这一行，就不会打印任何信息
+```
+
+#### 工厂函数
+
+* `static <U> CompletableFuture<U>	completedFuture(U value)`
+    等同于`Promise.resolve(value)`，返回一个已经以value完成的`CompletableFuture`
+    上面例子等价于：
+```java
+    CompletableFuture.completedFuture(1024).thenAccept((i) -> {
+    	System.out.println(i);
+    });
+```
+
+* `static CompletableFuture<Void>	runAsync(Runnable runnable)`
+    返回一个`CompletableFuture`，当`runable`执行完成，这个`CompletableFuture`也完成。
+    runnable在`ForkJoinPool.commonPool()`中被执行。
+
+* `static CompletableFuture<Void>	runAsync(Runnable runnable, Executor executor)`
+    同上，可以指定`executor`。
+
+* `static <U> CompletableFuture<U>	supplyAsync(Supplier<U> supplier)`
+    通`runAsync`，可以提供返回值。
+
+* `static <U> CompletableFuture<U>	supplyAsync(Supplier<U> supplier, Executor executor)`
+    同上，可以指定`executor`。
+
+### 合并多个`CompletableFuture`
+
+* `static CompletableFuture<Void>	allOf(CompletableFuture<?>... cfs)`
+* `static CompletableFuture<Object>	anyOf(CompletableFuture<?>... cfs)`
+
+```java
+	public static void main(String[] args) throws InterruptedException, ExecutionException {
+		CompletableFuture.allOf(delayValue(100, 2), delayValue(200, 5)).thenRun(() -> {
+			System.out.println("all is finished");
+		});
+		CompletableFuture.anyOf(delayValue(100, 2), delayValue(200, 5)).thenRun(() -> {
+			System.out.println("any is finished");
+		});
+		Thread.sleep(1000*5);
+	}
+	
+	private static CompletableFuture<Integer> delayValue(int i, int seconds) {
+		return CompletableFuture.supplyAsync(() -> {
+			try {
+				Thread.sleep(seconds * 1000);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return 0;
+			}
+			return i;
+		});
+	}
+```
+Console:
+```
+any is finished
+all is finished
+```
+> 注意：这里`CompletableFuture`与`Promise`不同，需要在最后调用`Thread#sleep()`或`Future#get()`，推测可能因为在`CompletableFuture`内部的线程被表示为`daemon`，当主线程结束后，由于没有非`daemon`线程，进程强制结束。
+
+### 常用函数
+1. `thenApply()`,`thenRun()`, `thenAccept`类似于`Promise#then()`，分别对应与处理函数的原型，是否有参数，是否有返回值，注意这些函数都是当`CompletableFuture`完成时才会调用，而出现异常时并不会调用。
+2. `thenCompose()`对应`Promise#then()`的回调函数返回一个Promise的情况，他要求处理函数返回一个`CompletableFuture`，可以认为处理函数返回的`CompletabledFuture`就成了`thenCompose()`返回的`CompletableFuture`。
+3. `whenComplete()`, `whenCompleteAsync()`有点像`finally`关键字，不论`CompletableFuture`执行结果如何都会走到他的回调函数，complete的值或异常值会以参数传递给回调函数。
+>这里的回调函数只能是`Comsumer`，不能有返回值，但是`whenComplete()`返回的`CompltetableFuture`总是以当前`CompletableFuture`完成的值作为完成值，除非回调函数出现异常，这时，返回的`CompletableFuture`以回调函数抛出的异常作为返回`CompletableFuture`的异常值。
+4. `handle()`, `handleAsync()`跟`whenComplete()`系列类似，都类似`finally`，区别有两点：
+    * handle接收的是一个`BiFunction`，有返回值，而`whenComplete`接收一个`Comsume()`，没返回值
+    * 当回调函数正常结束时，`handle()`以回调函数的返回值为返回的`CompletableFuture`的完成值，而`whenComplete()`会预留当前`CompletableFuture`的完成值作为返回`CompletableFuture`的完成值。
+> 从名字和功能上区分`whenComplete()`和`handle()`的使用区别：
+> `whenComplete()`认为不会修改当前`CompletableFuture`的完成值和异常值，虽然可以通过在回调函数中抛出异常来覆盖当前`CompletableFuture`的异常值，但是通常意义上，`whenComplete()`意思是当`CompletableFuture`结束时的后续处理，根据complete值或异常值加一些额外的处理，不修改状态和值，返回的`CompletableFuture`的状态和当前`CompletableFuture`状态一致。
+> 而`handle()`被用作一个新的转换，得到一个全新的`CompletableFuture`，根据当前`CompletableFuture`的结果处理得到一个全新的`CompletableFuture`。
+5. `exceptionally`
+等同于`Promise#catch()`。
+
+```java
+	public static void main(String[] args) throws InterruptedException, ExecutionException {
+		exceptionFuture().whenComplete((Void value, Throwable t) -> {
+			System.out.println(t.getMessage()); // don't change exception
+		}).thenAccept((Void value) -> {
+			System.out.println("reserved last completed value: " + value);
+		}).exceptionally((t) -> {
+			System.out.println(t.getMessage()); // exception will be delivery to here
+			return null;
+		});
+		Thread.sleep(1000*5);
+	}
+	
+	private static CompletableFuture<Void> exceptionFuture() {
+		return CompletableFuture.supplyAsync(() -> { throw new RuntimeException(); });
+	}
+```
+
+### 限制
+1. 只能抛出非Checked的Exception
+2. 链式调用后面产生的`CompletableFuture`受前面的限制，不能随心所欲。
+`exceptionally()`作为一个根据`Throwable`产生一个全新的`CompletableFuture`，但这个`CompletableFuture`必须完成一个某种类型的值，这个类型的值必须跟调用`exceptionally()`的`CompletableFuture`完成的值严格一致。
 
 ## ExcutorService
 
@@ -119,7 +228,6 @@ public interface ExecutorService extends Executor {
 }
 
 ```
-
 
 Methods | Description
 --------|-----------------
